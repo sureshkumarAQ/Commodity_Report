@@ -39,22 +39,37 @@ exports.generateReport = async(req,res)=>{
                 });
             });
         }
-        else
+         else
         {
-            const oldPrice = report.price;
-
-            const newPrice = (oldPrice*report.users.length + cmdtyPrice)/(report.users.length +1);
-
-            await Report.findOneAndUpdate(
+            var isUserExist = false;
+            for (let i = 0; i < report.users.length; i++) {
+                if(report.users[i]===req.body.userID)
                 {
-                    cmdtyID:commodityID
-                }, 
-                { $push: { users: req.body.userID },price:newPrice },
-                { upsert: true },
-                
-            ).exec();
+                    isUserExist = true;
+                    break;
+                }
+            }
 
-            res.status(200).send({"ReportID" : report._id});
+            if(!isUserExist)
+            {
+                const oldPrice = report.price;
+
+                const newPrice = (oldPrice*report.users.length + cmdtyPrice)/(report.users.length +1);
+
+                await Report.findOneAndUpdate(
+                    {
+                        cmdtyID:commodityID
+                    }, 
+                    { $push: { users: req.body.userID },price:newPrice },
+                    { upsert: true },
+                    
+                ).exec();
+
+                res.status(200).send({"ReportID" : report._id});
+            }
+
+            else
+            res.status(201).send("This User already reported")
 
         }
 
